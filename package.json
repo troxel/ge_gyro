@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "mysql2": "^3.6.2",
+    "net": "^1.0.2",
+    "promise-socket": "^7.0.0"
+  }
+}

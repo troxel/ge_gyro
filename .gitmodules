@@ -1,0 +1,3 @@
+[submodule "ge-iru-gyro"]
+	path = ge-iru-gyro
+	url = https://github.com/troxel/ge-iru-gyro.git
