@@ -1,0 +1,42 @@
+doctype html
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/gyro.css')
+
+    script(src='/jquery.min.js')
+    script(src='/plotly.min.js')
+
+    script(src='/js/bootstrap.min.js')
+
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    
+    script(src="/data-xhr-hdlr.js")
+    meta(name="theme-color", content="#712cf9")
+    meta(name="viewport", content="initial-scale=0.1")
+
+
+  body
+    nav.navbar.navbar-expand.navbar-dark.bg-dark.mb-4.shadow
+      .container.shadow
+        ul.navbar-nav.me-auto.mb-2.mb-lg-0
+          li.nav-item
+            a#pco.nav-link(href='/') Gyro Home
+          li.nav-item
+            span.navbar-text.text-white &nbsp; &nbsp;
+          li.nav-item
+            a#str1.nav-link(href="/control") Gyro Control
+          li.nav-item
+            span.navbar-text.text-white &nbsp;
+          li.nav-item
+            a#lgs.nav-link(href="/data") Data
+          li.nav-item
+            span.navbar-text.text-white &nbsp;
+          li.nav-item
+            a#lgs.nav-link(href="/log") Logs
+        
+        #fltBang.text-danger.fs-3.me-2.fw-bolder
+        #timeFmt.text-white.fw-bold.text-center.bg-success(style="width:170px;")
+        #spn.text-white.fw-bold.text-center(style="width:20px")
+    
+    block content

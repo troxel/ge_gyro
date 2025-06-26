@@ -1,0 +1,155 @@
+extends layout
+
+block content
+  .container
+    .form
+      .row 
+        .col-5
+          .row
+            table.table.table-bordered
+              tr
+                th.bg-primary-subtle(colspan='2') Current Attitude
+              tr
+                th.bg-success.col-4 Roll
+                td#roll.data_cell
+              tr
+                th.bg-success Pitch
+                td#pitch.data_cell
+              tr
+                th.bg-success Heading
+                td#hdg_true.data_cell
+            
+            table.table.table-bordered.mt-4 
+              tr
+                th.bg-primary-subtle(colspan='2') Current Status
+              tr
+                th.bg-success.col-4 Motion Status
+                td#move_stat_str.data_cell
+              tr
+                th.bg-success IRU Mode
+                td#iru_mode_str.data_cell
+              tr
+                th.bg-success GC Countdown
+                td#gc_time.data_cell
+              tr
+                th.bg-success GC Mode
+                td#gc_mode_str.data_cell
+              tr
+                th.bg-success MOXA 
+                td#ping_stat.data_cell(style='color: orange;')
+        .col
+          .row
+            .col-4
+            .col-6
+              .row
+                button#gc_cmd.btn.btn-primary.mb-3(type='button' onclick='gc_cmd()') GyroCompass Command
+              .row
+                button.btn.btn-primary.mb-3(type='button' onclick='resetIMU()') Reset IMU
+              .row
+                button.btn.btn-primary.mb-3(type='button' onclick='restart_acq()') ReStart Gyro Program
+
+  style.
+  
+  script.
+    $( document ).ready( () => {
+
+      const repRate = 1000
+
+      const host = window.location.hostname
+      const proto = window.location.protocol
+      const port = window.location.port
+      const url_srv = `${proto}//${host}:${port}/control`;
+
+      const url_xhr = `${url_srv}/xhr`;
+    
+      DH = dataXhrHdlr()
+  
+      const rtn = get_xhr_data(url_xhr,DH)
+
+      function get_xhr_data(url_xhr,DH) {
+   
+        let timeoutId = 0
+
+        $.ajax({
+          url: url_xhr,
+          type: 'GET',
+          data: { },
+          success: function(data){ 
+
+              if ( data['error'] ) {
+                console.error(this.url_xhr, this.textStatus, data['error']);
+                return;
+              }
+
+              //spinner(data.time)
+
+              DH.process(data)
+          },
+          complete: function(){
+            if (timeoutId !== 0) clearTimeout(timeoutId)
+            const rngWin = $('select[name="rng_win"]').val();
+            timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+          },
+          error: function (jqXhr, textStatus, errorMessage) {
+              console.error('Ajax Error! ' + errorMessage);
+              //spinnerX()
+          },
+          timeout:7000,
+          dataType: 'json'        
+        })
+      }
+
+      // ----------------------
+      // -- Event handlers ----
+      // ----------------------
+    
+      // Gyrocompass command
+      gc_cmd = () => {
+
+        $.ajax({
+          url: `${url_srv}/gyrocompass`,
+          type: 'POST',
+          data: { command: 'gyrocompass' },
+          success: function(response) {
+            console.log('Command written successfully:', response);
+          },
+          error: function(jqXhr, textStatus, errorMessage) {
+            console.error('Error writing command:', errorMessage);
+          }
+        });
+      }
+
+      // Reset IMU command
+      resetIMU = () => {
+
+        $.ajax({
+          url: `${url_srv}/reset`,
+          type: 'POST',
+          data: { command: 'reset' },
+          success: function(response) {
+            console.log('IMU reset successfully:', response);
+          },
+          error: function(jqXhr, textStatus, errorMessage) {
+        console.error('Error resetting IMU:', errorMessage);
+          }
+        });
+      }
+
+      // Restart acquisition command
+      // This function sends a POST request to the server to restart the acquisition process.
+      restart_acq = () => {
+
+        $.ajax({
+          url: `${url_srv}/restart_acq`,
+          type: 'POST',
+          data: { command: 'restart_acq' },
+          success: function(response) { 
+            console.log('Gyro program restarted successfully:', response); 
+          },
+          error: function(jqXhr, textStatus, errorMessage) {
+            console.error('Error restarting gyro program:', errorMessage);
+          }
+        });
+      }
+
+    })

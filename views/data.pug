@@ -1,0 +1,48 @@
+extends layout
+
+block content
+  .container
+    .form
+      .row 
+        .col-7
+          div 
+            h2 Download GyroCompass Data
+      .row 
+        .col-5
+          ul.list-group.mt-3 
+            li.list-group-item 
+              a.lead(href='/data/download') Download last 24 hours
+            li.list-group-item 
+              a.lead(href='/data/download?days=7') Download last 7 days
+      .row
+        .col-5
+            h3.mt-5 Download Time Range
+            form(action='/data/download_range' method='get')
+              .form-group
+                label(for='fromDate') From:
+                input#fromDate.form-control(type='date' name='fromDate' required)
+              .form-group.mt-2
+                label(for='toDate') To:
+                input#toDate.form-control(type='date' name='toDate' required)
+              button.btn.btn-primary.mt-2(type='submit') Download
+          
+
+  .script
+    // ----------------------
+    // -- Event handlers ----
+    // ----------------------
+    //- function dataBtn() {
+    //-   const button = document.getElementById('pauseUpdate');
+    //-   const body = document.body;
+    //-   if (timeoutId !== 0) {
+    //-   clearTimeout(timeoutId);
+    //-   timeoutId = 0;
+    //-   button.textContent = "Resume Update";
+    //-   button.style.backgroundColor = "green";
+    //-   } else {
+    //-   timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+    //-   button.textContent = "Pause Update";
+    //-   button.style.backgroundColor = "red";
+    //-   }
+    //- }
+

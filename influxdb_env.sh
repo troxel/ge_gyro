@@ -1,0 +1,1 @@
+export INFLUXDB3_AUTH_TOKEN=apiv3_bB4slOmma5w6vJOgrMSaD0cgG5nw1vkvCzo402-TodbqBrg-C8aTFJNgvnngg97aVzyMxtTx3KQGwsn4trWK6g

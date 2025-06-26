@@ -1,0 +1,33 @@
+.lbl
+{ 
+  background-color:#3377CC; 
+  color:white;
+  width: 130px;
+}
+
+.hdr
+{
+  text-align:center;
+  background-color:#003399;
+  color:white;
+  font-size:21px;  
+  font-weight:bold;
+}
+
+.data_row
+{
+   border:1px;
+   border-style:dotted;
+}
+
+.data_cell 
+{ 
+  text-align:right; padding-right:30px; 
+  font-weight:bold; 
+}
+.data_cell2 
+{ 
+  text-align:right; padding-right:30px; 
+  font-weight:bold; 
+  background-color:#E0E0E0;
+}

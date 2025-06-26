@@ -1,0 +1,186 @@
+extends layout
+
+block content
+  .container
+    .form
+      .row 
+        .col
+          div#hdg_plot.border(style="height:300px")
+      .row.mt-2 
+        .col
+          div#rp_plot.border(style="height:175px")
+      .row(style="margin:40px")
+        .col-4
+          table.table.table-success.table-striped-columns
+            tr
+              td.hdr(colspan='2') Current Attitude
+            tr.data_row
+              td.lbl Roll
+              td#roll.data_cell
+            tr.data_row
+              td.lbl Pitch
+              td#pitch.data_cell
+            tr.data_row
+              td.lbl Heading
+              td#hdg_true.data_cell
+        .col-4       
+          table.table.table-success.table-striped-columns
+            tr
+              td.hdr(colspan='2') GyroCompass Status
+            tr.data_row
+              td.lbl GC Countdown
+              td#gc_time.data_cell
+            tr
+              td#gc_mode_str(colspan='2')
+        .col-4        
+            | Plot Time Window
+            br
+            select(name='rng_win' onchange='this.form.submit();')
+              option(value='.5') .5
+              option(value='1' selected='selected') 1
+              option(value='5') 5
+              option(value='10') 10
+              option(value='30') 30
+              option(value='60') 60
+              option(value='120') 120
+              option(value='240') 240
+              option(value='480') 480
+            |   Minutes
+            hr
+            button#pauseUpdate(type='button' style='background-color: red; color: white;' onclick='pauseUpdate()') Pause Update
+
+  script.
+
+    var timeoutId = 0
+
+    const repRate = 1000
+
+    const host = window.location.hostname
+    const proto = window.location.protocol
+    const port = window.location.port
+    const url_srv = `${proto}//${host}:${port}`;
+
+    const url_xhr = `${url_srv}/xhr`;
+  
+    DH = dataXhrHdlr()
+
+    // Add plot handler function to dataXhrHdlr
+    DH.plot = function(pData){ 
+
+      var layout = {
+        showlegend: true,
+        xaxis: {
+          autorange: true,
+          showline: false,
+          showgrid: false, 
+          zeroline: false, 
+          visible: false,  
+        },
+        yaxis: {
+          rangemode: 'tozero',
+          title:{text:"Degrees"},
+          autorange: true
+        },
+        margin: {
+        b: 18,
+        t: 15,
+        pad: 0,
+        },
+        plot_bgcolor: 'lightblue',
+        //paper_bgcolor: 'white',
+      }  
+
+      //console.log(pData.hdg)
+
+      const hdg_plot = {
+              x: pData.timeSeries,
+              y: pData.hdg,
+              name: "Hdg ",
+              mode: 'lines+markers',
+              type: 'scatter',               
+      }
+        
+      Plotly.newPlot('hdg_plot', [hdg_plot], layout);
+
+      layout.xaxis['showline'] = true
+      layout.xaxis['showgrid'] = true 
+      layout.xaxis['zeroline'] = true 
+      layout.xaxis['visible'] = true  
+      //layout.xaxis['title'] = {text:"Time",title_font_color:"black",size:12}
+      layout.plot_bgcolor = 'lightgreen'
+
+      const pitch_plot = {
+              x: pData.timeSeries,
+              y: pData.pitch,
+              name: "Pitch",
+              mode: 'lines+markers',
+              type: 'scatter'
+      }
+
+      const roll_plot = {
+              x: pData.timeSeries,
+              y: pData.roll,
+              name: "Roll",
+              mode: 'lines+markers',
+              type: 'scatter'
+      }
+
+      Plotly.newPlot('rp_plot', [pitch_plot, roll_plot], layout);
+    
+    }
+
+    const rtn = get_xhr_data(url_xhr,DH)
+
+    function get_xhr_data(url_xhr,DH) {
+  
+      console.log(timeoutId)
+
+      const rngWin = $('select[name="rng_win"]').val();
+
+      $.ajax({
+        url: url_xhr,
+        type: 'GET', // or 'POST' if you prefer
+        data: { rng_win: rngWin },
+        success: function(data){ 
+
+            if ( data['error'] ) {
+              console.error(this.url_xhr, this.textStatus, data['error']);
+              return;
+            }
+
+            //spinner(data.time)
+
+            DH.process(data)
+        },
+        complete: function(){
+          if (timeoutId !== 0) clearTimeout(timeoutId)
+          //const rngWin = $('select[name="rng_win"]').val();
+          timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+        },
+        error: function (jqXhr, textStatus, errorMessage) {
+            console.error('Ajax Error! ' + errorMessage);
+            //spinnerX()
+        },
+        timeout:70000,
+        dataType: 'json'        
+      })
+    }
+
+    // ----------------------
+    // -- Event handlers ----
+    // ----------------------
+    function pauseUpdate() {
+      const button = document.getElementById('pauseUpdate');
+      const body = document.body;
+      if (timeoutId !== 0) {
+      clearTimeout(timeoutId);
+      timeoutId = 0;
+      button.textContent = "Resume Update";
+      button.style.backgroundColor = "green";
+      } else {
+      timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+      button.textContent = "Pause Update";
+      button.style.backgroundColor = "red";
+      }
+    }
+

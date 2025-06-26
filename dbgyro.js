@@ -80,6 +80,43 @@ class dbGyro {
     const rst = await this.connection.query(updateSql)
   }
 
+  // ----------------------------------
+  async getState() {
+    const [rows] = await this.connection.execute('SELECT * FROM gyro_state ORDER BY id DESC LIMIT 1');
+    const row = rows[0];
+    if (row) {
+      row.roll = parseFloat(row.roll.toFixed(2));
+      row.pitch = parseFloat(row.pitch.toFixed(2));
+      row.hdg_true = parseFloat(row.hdg_true.toFixed(2));
+    }
+    return row;
+  }
+
+  // ----------------------------------
+  async getAttitudePastNow(seconds) {
+    const now = Math.floor(Date.now()); // current epoch milliseconds
+    const since = now - seconds*1000;
+    const [rows] = await this.connection.execute(
+      `SELECT * FROM ${this.rpyTbl} WHERE time BETWEEN ? AND ? ORDER BY time ASC`,
+      [since, now]
+    );
+    return rows;
+  }
+
+// ----------------------------------
+  async getAttitudeRange(startTime, endTime) {
+    const [rows] = await this.connection.execute(
+      `SELECT * FROM ${this.rpyTbl} WHERE time BETWEEN ? AND ? ORDER BY time ASC`,
+      [startTime, endTime]
+    );
+    return rows;
+  }
+
+  // ----------------------------------
+  async closeConnection() {
+    await this.connection.end();
+  }
+
 }
 
 module.exports = dbGyro;
