@@ -14,6 +14,8 @@ block content
           table.table.table-success.table-striped-columns
             tr
               td.hdr(colspan='2') Current Attitude
+                a.ms-5(href='#', style='font-size: 70%;align:right;', onclick='copyToClipboard()') &UpperRightArrow;
+                span#clipboard_txt(style='display:none;')
             tr.data_row
               td.lbl Roll
               td#roll.data_cell
@@ -23,6 +25,13 @@ block content
             tr.data_row
               td.lbl Heading
               td#hdg_true.data_cell
+            tr.data_row
+              td.lbl Point to Point
+              td#p2p.data_cell
+            tr.data_row
+              td.lbl Average
+              td#ave.data_cell
+
         .col-4       
           table.table.table-success.table-striped-columns
             tr
@@ -32,6 +41,16 @@ block content
               td#gc_time.data_cell
             tr
               td#gc_mode_str(colspan='2')
+            tr.data_row
+              td.lbl Time Update
+              td#update_time_fmt.data_cell
+            tr.data_row
+              td.lbl Date Update
+              td#update_date_fmt.data_cell
+            tr.data_row
+              td.lbl Update Status
+              td#update_status.data_cell
+
         .col-4        
             | Plot Time Window
             br
@@ -42,9 +61,7 @@ block content
               option(value='10') 10
               option(value='30') 30
               option(value='60') 60
-              option(value='120') 120
-              option(value='240') 240
-              option(value='480') 480
+              option(value='90') 90
             |   Minutes
             hr
             button#pauseUpdate(type='button' style='background-color: red; color: white;' onclick='pauseUpdate()') Pause Update
@@ -52,6 +69,7 @@ block content
   script.
 
     var timeoutId = 0
+    var pauseFlg = false
 
     const repRate = 1000
 
@@ -66,6 +84,16 @@ block content
 
     // Add plot handler function to dataXhrHdlr
     DH.plot = function(pData){ 
+
+      // No data don't attempt to plot
+      if ( pData.hdg.length === 0 ) {
+        $('#hdg_plot').html('<h1>No data For Time Span</h1>')
+        $('#rp_plot').html('<h1>No data For Time Span</h1>')
+        return
+      } else {
+        $('#hdg_plot').html('')
+        $('#rp_plot').html('')
+      }
 
       var layout = {
         showlegend: true,
@@ -82,14 +110,13 @@ block content
           autorange: true
         },
         margin: {
-        b: 18,
-        t: 15,
-        pad: 0,
+          b: 18,
+          t: 15,
+          pad: 0,
         },
         plot_bgcolor: 'lightblue',
-        //paper_bgcolor: 'white',
       }  
-
+ 
       //console.log(pData.hdg)
 
       const hdg_plot = {
@@ -99,7 +126,7 @@ block content
               mode: 'lines+markers',
               type: 'scatter',               
       }
-        
+
       Plotly.newPlot('hdg_plot', [hdg_plot], layout);
 
       layout.xaxis['showline'] = true
@@ -131,9 +158,10 @@ block content
 
     const rtn = get_xhr_data(url_xhr,DH)
 
+    // Function to handle the data received from the server
     function get_xhr_data(url_xhr,DH) {
   
-      console.log(timeoutId)
+      //console.log(timeoutId)
 
       const rngWin = $('select[name="rng_win"]').val();
 
@@ -148,14 +176,28 @@ block content
               return;
             }
 
+            //console.log(data)
+
             //spinner(data.time)
+
+            hdg_stats = get_hdg_stats(data.plot.hdg);
+            data.innerHTML['p2p'] = hdg_stats.p2p;
+            data.innerHTML['ave'] = hdg_stats.ave;
 
             DH.process(data)
         },
         complete: function(){
-          if (timeoutId !== 0) clearTimeout(timeoutId)
-          //const rngWin = $('select[name="rng_win"]').val();
-          timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+          if (timeoutId !== 0) {
+            clearTimeout(timeoutId) 
+            //const rngWin = $('select[name="rng_win"]').val();
+          }
+
+          if ( pauseFlg ) {
+            timeoutId = 0;
+          } else {
+            timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+          }
+
         },
         error: function (jqXhr, textStatus, errorMessage) {
             console.error('Ajax Error! ' + errorMessage);
@@ -165,7 +207,63 @@ block content
         dataType: 'json'        
       })
     }
+    
+    // ------------------------
+    // -- set blank plot layout
+    // ------------------------
+    function no_data_layout() {
+      return {
+        "xaxis": {
+            "visible": false
+        },
+        "yaxis": {
+            "visible": false
+        },
+        "annotations": [
+            {
+                "text": "No matching data found",
+                "xref": "paper",
+                "yref": "paper",
+                "showarrow": false,
+                "font": {
+                    "size": 28
+                }
+            }
+        ]
+      }
+    }    
 
+    // ------------------------
+    // -- get stats
+    // ------------------------
+    function get_hdg_stats(hdg_data) {
+  
+      var hdg_vec = []; 
+          
+      var len = hdg_data.length;
+      //DumperAlert(len);
+      
+      var hdg_stats = {};
+      hdg_stats["sum"] = 0;
+      hdg_stats["min"] = 1000;
+      hdg_stats["max"] = -1000;
+      hdg_stats["ave"] = 0;
+      for (var i = 0; i < len ; i++) {
+
+        hdg_vec[i] = hdg_data[i]; 
+                
+        hdg_stats["sum"] = hdg_stats["sum"] + hdg_vec[i];
+        if ( hdg_vec[i] < hdg_stats["min"] ) { hdg_stats["min"] = hdg_vec[i]  } 
+        if ( hdg_vec[i] > hdg_stats["max"] ) { hdg_stats["max"] = hdg_vec[i]  } 
+      }
+      
+      hdg_stats["ave"] = (hdg_stats["sum"] / hdg_vec.length).toFixed(2);
+      hdg_stats["p2p"] = (hdg_stats["max"] - hdg_stats["min"]).toFixed(2);
+  
+      return(hdg_stats);
+   
+    }
+    
     // ----------------------
     // -- Event handlers ----
     // ----------------------
@@ -173,14 +271,42 @@ block content
       const button = document.getElementById('pauseUpdate');
       const body = document.body;
       if (timeoutId !== 0) {
-      clearTimeout(timeoutId);
-      timeoutId = 0;
-      button.textContent = "Resume Update";
-      button.style.backgroundColor = "green";
+        clearTimeout(timeoutId);
+        timeoutId = 0;
+        pauseFlg = true;
+        body.style.backgroundColor = "lightgray";
+        button.textContent = "Resume Update";
+        button.style.backgroundColor = "green";
       } else {
-      timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
-      button.textContent = "Pause Update";
-      button.style.backgroundColor = "red";
+        timeoutId = setTimeout(get_xhr_data, repRate, url_xhr, DH);
+        pauseFlg = false;
+        button.textContent = "Pause Update";
+        body.style.backgroundColor = "white";
+        button.style.backgroundColor = "red";
       }
     }
 
+    function copyToClipboard() {
+      const textToCopy = document.getElementById('clipboard_txt').textContent;
+      //alert(textToCopy);
+      // Use the Clipboard API to copy text to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          //alert('Text copied to clipboard!');
+        }).catch(err => {
+          console.error('Failed to copy text: ', err);
+        });
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = textToCopy;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          //alert('Text copied to clipboard!');
+        } catch (err) {
+          console.error('Fallback: Failed to copy text: ', err);
+        }
+        document.body.removeChild(textarea);
+      }
+    }

@@ -60,6 +60,8 @@ class dbGyro {
   // --------------------------------
   async update_state(state) {
 
+    const update_time = Date.now()
+    
     const updateSql = `UPDATE gyro_state SET
     gc_time=${state['gc_time']},
     gc_bmc_time=${state['gc_bmc_time']},
@@ -74,7 +76,8 @@ class dbGyro {
     hdg_true=${state['hdg_true']},
     cbit=${state['cbit']},
     iru_mode=${state['iru_mode']},
-    iru_mode_str='${state['iru_mode_str']}' WHERE id = 1`;
+    iru_mode_str='${state['iru_mode_str']}',
+    update_time=${update_time} WHERE id = 1`;
      
     //console.log(updateSql)
     const rst = await this.connection.query(updateSql)

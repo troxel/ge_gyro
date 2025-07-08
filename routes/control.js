@@ -51,19 +51,22 @@ router.get('/xhr', async function(req, res, next) {
     setAttribute['gc_cmd'] = {disabled: 'true'};
   }
 
-  innerHTML['ping_stat'] = config.ip.HOST
+  innerHTML['moxa_ip'] = config.ip.HOST
   style['ping_stat'] = {color: 'orange'}; // Default to orange for unknown state
 
   try {
     const pingResult = await ping.promise.probe(config.ip.HOST);
     if (pingResult.alive) {
       style['ping_stat'] = {color: 'green', fontWeight: 'bold'};
+      innerHTML['ping_stat'] = `UP`;
     } else {
       style['ping_stat'] = {color: 'red'};
+      innerHTML['ping_stat'] = 'Down';
     }
   } catch (error) {
     console.error(`Error pinging host: ${error.message}`);
     style['ping_stat'] = {color: 'red'};
+    innerHTML['ping_stat'] = 'Ping: Error';
   }
 
   // Prepare to return

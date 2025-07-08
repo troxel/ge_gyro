@@ -45,12 +45,30 @@ router.get('/xhr', async function(req, res, next) {
   //console.log("State: ",row)
 
   var rpy_rows = await dbc.getAttitudePastNow(rng_win*60)
-  // console.log("rpy_rows: ",rpy_rows.length)
+  //console.log("rpy_rows: ",rpy_rows.length)
   // console.log("rpy_rows: ",rpy_rows)
 
-  row['timeNow']  = Date.now()
+  row['update_time'] = new Date(row['update_time'])
+  row['update_time_fmt'] = row['update_time'].toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  row['update_date_fmt'] = row['update_time'].toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })
 
-  innerHTML = row
+  row['timeNow']  = Date.now()
+  const timeDiff = row['timeNow'] - row['update_time']
+
+  if ( timeDiff > 5000 ) {
+    row['update_status'] = 'Update Stale';
+    setAttribute['update_status'] = {'style': 'color: red; font-weight: bold;'}
+  } else if ( row['gc_mode_num'] > 0) { 
+    row['update_status'] = 'GC Active';
+    setAttribute['update_status'] = {'style': 'color: darkorange; font-weight: bold;'}
+  } else {
+    row['update_status'] = 'Update Fresh';
+    setAttribute['update_status'] = {'style': 'color: green; font-weight: bold;'}
+  }
+       
+  row['clipboard_txt'] = `Roll ${row['roll']}\nPitch ${row['pitch']}\nHeading ${row['hdg_true']}\n`
+  console.log("clipboard_txt: ", row['clipboard_txt'])
+  innerHTML = row;
 
   // Prepare to return
   rtnObj.innerHTML = innerHTML

@@ -36,17 +36,17 @@ block content
                 td#gc_mode_str.data_cell
               tr
                 th.bg-success MOXA 
-                td#ping_stat.data_cell(style='color: orange;')
-        .col
+                td.data_cell
+                  span.me-4#moxa_ip 
+                  span#ping_stat(style='color: orange;')
+        .col-1
+        .col-5
           .row
-            .col-4
-            .col-6
-              .row
-                button#gc_cmd.btn.btn-primary.mb-3(type='button' onclick='gc_cmd()') GyroCompass Command
-              .row
-                button.btn.btn-primary.mb-3(type='button' onclick='resetIMU()') Reset IMU
-              .row
-                button.btn.btn-primary.mb-3(type='button' onclick='restart_acq()') ReStart Gyro Program
+            button#gc_cmd.btn.btn-primary.mb-3(type='button' onclick='gc_cmd()') Send GyroCompass Command
+          .row
+            button.btn.btn-primary.mb-3(type='button' onclick='resetIMU()') Send Reset Gyro Command
+          .row
+            button.btn.btn-primary.mb-3.mt-3(type='button' onclick='restart_acq()') ReStart Gyro Acquire Program
 
   style.
   
