@@ -1,3 +1,6 @@
 [submodule "ge-iru-gyro"]
 	path = ge-iru-gyro
 	url = https://github.com/troxel/ge-iru-gyro.git
+[submodule "data-xhr-hdlr"]
+	path = data-xhr-hdlr
+	url = https://github.com/troxel/data-xhr-hdlr.git
