@@ -20,5 +20,7 @@ The primary GUI screens are:
 
 For more detailed interface information there is sister Perl module with more information at [Device::IRU_GE](https://metacpan.org/pod/Device::IRU_GE)
 
+Contact <troxel@perlworks.com>
+
 
 
